@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Uniform Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 30px;
+      color: #222;
+    }
+
+    h1 {
+      text-align: center;
+      color: #FF5B1A;
+      margin: 0 0 10px;
+    }
+
+    .logoWrap {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .logoWrap img {
+      max-width: 300px;
+      height: auto;
+    }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #555;
+      font-size: 15px;
+    }
+
+    .summary {
+      background: #333;
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+    }
+
+    .clientRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .clientField {
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      min-width: 180px;
+    }
+
+    .clientField label {
+      margin-bottom: 4px;
+    }
+
+    .clientField input {
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+    }
+
+    .totals {
+      text-align: center;
+      line-height: 1.9;
+    }
+
+    .total {
+      font-size: 30px;
+      color: #FF5B1A;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .valueNote {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .buttonRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button {
+      background: #FF5B1A;
+      border: none;
+      padding: 12px 18px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      min-width: 180px;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .sendStatus {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+      color: #fff;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .card.active {
+      border: 2px solid #FF5B1A;
+      box-shadow: 0 4px 12px rgba(255,91,26,0.15);
+    }
+
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .options {
+      padding: 14px;
+    }
+
+    .productTitle {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .productPrice {
+      color: #FF5B1A;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .fieldGroup {
+      margin-bottom: 12px;
+    }
+
+    .fieldGroup label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    .fieldGroup input,
+    .fieldGroup select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .lineNote {
+      font-size: 12px;
+      color: #777;
+      margin-top: 6px;
+    }
+
+    .footerNote {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 15px;
+      }
+
+      .clientField {
+        min-width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logoWrap">
+    <img src="logo.png" alt="Custom Workwear Direct Logo">
+  </div>
+
+  <h1>Uniform Builder</h1>
+
+  <div class="intro">
+    <div class="intro">
+  Build your team’s uniform package in under 60 seconds and see the cost per employee.
+  </div>
+
+  <div class="summary">
+    <div class="clientRow">
+      <div class="clientField">
+        <label for="clientName">Client Name</label>
+        <input id="clientName" type="text">
+      </div>
+      <div class="clientField">
+        <label for="clientCompany">Company</label>
+        <input id="clientCompany" type="text">
+      </div>
+      <div class="clientField">
+        <label for="clientEmail">Email</label>
+        <input id="clientEmail" type="email">
+      </div>
+      <div class="clientField">
+        <label for="staff">Number of Employees</label>
+        <input id="staff" type="number" min="1" value="1">
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="total">£<span id="total">0.00</span></div>
+      Cost per employee £<span id="employee">0.00</span><br>
+      Monthly £<span id="month">0.00</span><br>
+      Daily £<span id="day">0.00</span><br>
+      Total garments <span id="garments">0</span>
+
+      <div class="valueNote">
+        From less than a coffee per day per employee
+      </div>
+    </div>
+
+    <div class="buttonRow">
+      <button type="button" onclick="downloadQuote()">Download Quote</button>
+      <button type="button" onclick="sendQuote()" id="sendQuoteBtn">Send Me This Quote</button>
+      <button type="button" onclick="clearBuilder()">Clear Estimator</button>
+    </div>
+
+    <div class="sendStatus" id="sendStatus"></div>
+  </div>
+
+  <div class="products" id="products"></div>
+
+  <div class="footerNote">
+    This estimator is for budgeting purposes. Final garment sizes and any colour split are confirmed before order.
+  </div>
+
+  <script>
+    const EMAILJS_PUBLIC_KEY = "7Xoh3edDIYoMya2df";
+    const EMAILJS_SERVICE_ID = "service_jpj7bou";
+    const EMAILJS_TEMPLATE_ID = "uniform_quote_pdf";
+
+    const SALES_EMAIL = "sales@customworkweardirect.co.uk";
+
+    emailjs.init({
+      publicKey: EMAILJS_PUBLIC_KEY
+    });
+
+    const products = [
+      {
+        name: "Polo Shirt",
+        price: 5,
+        image: "polo.jpg",
+        type: "polo",
+        recommendation: "Typical: 2–3 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "T-Shirt",
+        price: 5,
+        image: "tshirt.jpg",
+        type: "tshirt",
+        recommendation: "Typical: 2–3 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"]
+      },
+      {
+        name: "Hoodie",
+        price: 5,
+        image: "hoodie.jpg",
+        type: "hoodie",
+        recommendation: "Typical: 1–2 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"]
+      },
+      {
+        name: "Sweatshirt",
+        price: 5,
+        image: "sweatshirt.jpg",
+        type: "sweatshirt",
+        recommendation: "Typical: 1–2 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"]
+      },
+      {
+        name: "Body Warmer",
+        price: 5,
+        image: "bodywarmer.jpg",
+        type: "bodywarmer",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "Fleece Jacket",
+        price: 5,
+        image: "fleecejacket.jpg",
+        type: "fleece",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "Soft Shell Jacket",
+        price: 5,
+        image: "softshell.jpg",
+        type: "softshell",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "Hi Vis Vest",
+        price: 5,
+        image: "hivisvest.jpg",
+        type: "hivis",
+        recommendation: "Typical: 1–2 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "Hi Vis Jacket",
+        price: 5,
+        image: "hivisjacket.jpg",
+        type: "hivis",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"]
+      },
+      {
+        name: "Work Trouser",
+        price: 5,
+        image: "worktrouser.jpg",
+        type: "trouser",
+        recommendation: "Typical: 2 per employee",
+        brandingOptions: ["No Branding"]
+      },
+      {
+        name: "Safety Trainers",
+        price: 35,
+        image: "trainers.jpg",
+        type: "footwear",
+        recommendation: "Typical: 1 pair per employee",
+        brandingOptions: ["No Branding"]
+      },
+      {
+        name: "Safety Boots",
+        price: 79,
+        image: "boots.jpg",
+        type: "footwear",
+        recommendation: "Typical: 1 pair per employee",
+        brandingOptions: ["No Branding"]
+      },
+      {
+        name: "Safety Cap",
+        price: 5,
+        image: "cap.jpg",
+        type: "cap",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Front Embroidery"]
+      },
+      {
+        name: "Beanie",
+        price: 5,
+        image: "beanie.jpg",
+        type: "cap",
+        recommendation: "Typical: 1 per employee",
+        brandingOptions: ["No Branding", "Front Embroidery"]
+      }
+    ];
+
+    const brandingPrices = {
+      "No Branding": 0,
+      "Left Chest Embroidery": 5,
+      "Left Chest Print": 4,
+      "Front Embroidery": 5,
+      "Large Front Print": 5,
+      "Large Back Print": 5
+    };
+
+    const colourMap = {
+      polo: ["Black", "Charcoal", "Navy", "Grey", "White"],
+      tshirt: ["Black", "Charcoal", "Navy", "Grey", "White"],
+      hoodie: ["Black", "Charcoal", "Navy", "Grey"],
+      sweatshirt: ["Black", "Charcoal", "Navy", "Grey"],
+      bodywarmer: ["Black", "Navy"],
+      fleece: ["Black", "Navy", "Grey"],
+      softshell: ["Black", "Navy"],
+      hivis: ["Yellow", "Orange"],
+      trouser: ["Black", "Navy"],
+      cap: ["Black", "Navy", "Grey"],
+      footwear: []
+    };
+
+    const container = document.getElementById("products");
+    const sendStatus = document.getElementById("sendStatus");
+    const sendQuoteBtn = document.getElementById("sendQuoteBtn");
+
+    function getColours(type) {
+      return colourMap[type] || [];
+    }
+
+    function buildColourSelect(type) {
+      const colours = getColours(type);
+      if (!colours.length) return "";
+
+      return `
+        <div class="fieldGroup">
+          <label>Preferred colour</label>
+          <select class="colourSelect">
+            ${colours.map(colour => `<option value="${colour}">${colour}</option>`).join("")}
+          </select>
+          <div class="lineNote">Final colour split can be confirmed before order.</div>
+        </div>
+      `;
+    }
+
+    function buildBrandingSelect(options) {
+      return `
+        <div class="fieldGroup">
+          <label>Logo option</label>
+          <select class="brandingSelect">
+            ${options.map(option => `<option value="${option}">${option}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    }
+
+    function renderProducts() {
+      container.innerHTML = "";
+
+      products.forEach(product => {
+        const card = `
+          <div class="card" data-name="${product.name}" data-price="${product.price}">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="options">
+              <div class="productTitle">${product.name}</div>
+              <div class="productPrice">£${product.price} each</div>
+
+              <div class="fieldGroup">
+                <label>How many per person?</label>
+                <input type="number" class="qtyPerEmployee" min="0" value="0">
+                <div class="lineNote">${product.recommendation}</div>
+              </div>
+
+              ${buildColourSelect(product.type)}
+              ${buildBrandingSelect(product.brandingOptions)}
+            </div>
+          </div>
+        `;
+
+        container.insertAdjacentHTML("beforeend", card);
+      });
+    }
+
+    function calculate() {
+      const staff = parseInt(document.getElementById("staff").value, 10) || 1;
+      let total = 0;
+      let totalGarments = 0;
+
+      document.querySelectorAll(".card").forEach(card => {
+        const unitPrice = parseFloat(card.dataset.price) || 0;
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+
+        const totalQty = qtyPerEmployee * staff;
+        const lineTotal = totalQty * (unitPrice + brandingPrice);
+
+        total += lineTotal;
+        totalGarments += totalQty;
+
+        if (qtyPerEmployee > 0) {
+          card.classList.add("active");
+        } else {
+          card.classList.remove("active");
+        }
+      });
+
+      const costPerEmployee = total / staff;
+
+      document.getElementById("total").innerText = total.toFixed(2);
+      document.getElementById("employee").innerText = costPerEmployee.toFixed(2);
+      document.getElementById("month").innerText = (costPerEmployee / 12).toFixed(2);
+      document.getElementById("day").innerText = (costPerEmployee / 365).toFixed(2);
+      document.getElementById("garments").innerText = totalGarments;
+    }
+
+    function clearBuilder() {
+      document.getElementById("clientName").value = "";
+      document.getElementById("clientCompany").value = "";
+      document.getElementById("clientEmail").value = "";
+      document.getElementById("staff").value = 1;
+      sendStatus.textContent = "";
+
+      document.querySelectorAll(".qtyPerEmployee").forEach(input => input.value = 0);
+      document.querySelectorAll(".brandingSelect").forEach(select => select.selectedIndex = 0);
+      document.querySelectorAll(".colourSelect").forEach(select => select.selectedIndex = 0);
+      document.querySelectorAll(".card").forEach(card => card.classList.remove("active"));
+
+      calculate();
+    }
+
+    function getSelectedItems() {
+      const staff = parseInt(document.getElementById("staff").value, 10) || 1;
+      const items = [];
+
+      document.querySelectorAll(".card").forEach(card => {
+        const productName = card.dataset.name;
+        const unitPrice = parseFloat(card.dataset.price) || 0;
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+
+        if (qtyPerEmployee <= 0) return;
+
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+        const colourSelect = card.querySelector(".colourSelect");
+        const colour = colourSelect ? colourSelect.value : "";
+        const totalQty = qtyPerEmployee * staff;
+        const lineTotal = totalQty * (unitPrice + brandingPrice);
+
+        items.push({
+          productName,
+          qtyPerEmployee,
+          totalQty,
+          colour,
+          brandingType,
+          lineTotal
+        });
+      });
+
+      return items;
+    }
+
+    function buildQuoteText() {
+      const items = getSelectedItems();
+
+      if (!items.length) {
+        return "No items selected.";
+      }
+
+      return items.map(item => {
+        let line = `${item.productName}
+- How many per person: ${item.qtyPerEmployee}
+- Total quantity: ${item.totalQty}`;
+
+        if (item.colour) {
+          line += `
+- Preferred colour: ${item.colour}`;
+        }
+
+        line += `
+- Logo option: ${item.brandingType}
+- Line total: £${item.lineTotal.toFixed(2)}`;
+
+        return line;
+      }).join("\n\n");
+    }
+
+    function buildQuoteHtml() {
+      const items = getSelectedItems();
+
+      if (!items.length) {
+        return "<p>No items selected.</p>";
+      }
+
+      const clientCompany = document.getElementById("clientCompany").value.trim();
+      const staff = parseInt(document.getElementById("staff").value, 10) || 1;
+      const totalGarments = document.getElementById("garments").innerText;
+      const totalEstimate = document.getElementById("total").innerText;
+      const costPerEmployee = document.getElementById("employee").innerText;
+      const monthlyCost = document.getElementById("month").innerText;
+      const dailyCost = document.getElementById("day").innerText;
+
+      const itemBlocks = items.map(item => {
+        return `
+          <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #ddd;">
+            <strong>${item.productName}</strong><br>
+            How many per person: ${item.qtyPerEmployee}<br>
+            Total quantity: ${item.totalQty}
+            ${item.colour ? `<br>Preferred colour: ${item.colour}` : ""}
+            <br>Logo option: ${item.brandingType}
+            <br>Line total: £${item.lineTotal.toFixed(2)}
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.6;">
+          <div style="margin: 20px 0;">
+            <p><strong>Company:</strong> ${clientCompany}</p>
+            <p><strong>Number of Employees:</strong> ${staff}</p>
+            <p><strong>Total Garments:</strong> ${totalGarments}</p>
+
+            <div style="margin-top:20px;">
+              <strong>Selected Items</strong>
+            </div>
+
+            <div style="margin-top:10px;">
+              ${itemBlocks}
+            </div>
+
+            <div style="margin-top:20px;">
+              <strong>Total Estimate:</strong> £${totalEstimate}<br>
+              <strong>Cost per Employee:</strong> £${costPerEmployee}<br>
+              <strong>Monthly Cost per Employee:</strong> £${monthlyCost}<br>
+              <strong>Daily Cost per Employee:</strong> £${dailyCost}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function sendQuote() {
+      const clientName = document.getElementById("clientName").value.trim();
+      const clientCompany = document.getElementById("clientCompany").value.trim();
+      const clientEmail = document.getElementById("clientEmail").value.trim();
+      const staff = parseInt(document.getElementById("staff").value, 10) || 1;
+      const total = document.getElementById("total").innerText;
+      const employee = document.getElementById("employee").innerText;
+      const month = document.getElementById("month").innerText;
+      const day = document.getElementById("day").innerText;
+      const garments = document.getElementById("garments").innerText;
+      const quoteItems = buildQuoteText();
+      const quoteHtml = buildQuoteHtml();
+
+      if (!clientName || !clientCompany || !clientEmail) {
+        sendStatus.textContent = "Please enter client name, company and email.";
+        return;
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(clientEmail)) {
+        sendStatus.textContent = "Please enter a valid email address.";
+        return;
+      }
+
+      if (getSelectedItems().length === 0) {
+        sendStatus.textContent = "Please add at least one product before sending.";
+        return;
+      }
+
+      sendQuoteBtn.disabled = true;
+      sendQuoteBtn.textContent = "Sending...";
+      sendStatus.textContent = "Sending quote...";
+
+const emailBodyHtml = `
+  <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.6;">
+    <p>Hi ${clientName},</p>
+
+    <p>Please see your new uniform estimate.</p>
+
+    ${quoteHtml}
+
+    <p>Please note: this estimate is for budgeting purposes. Final garment sizes and any colour split will be confirmed before order is placed.</p>
+
+    <p>
+      Kind regards,<br>
+      Custom Workwear Direct
+    </p>
+  </div>
+`;
+
+      const baseParams = {
+        client_name: clientName,
+        client_company: clientCompany,
+        client_email: clientEmail,
+        employees: staff,
+        total_garments: garments,
+        total_estimate: total,
+        cost_per_employee: employee,
+        monthly_cost: month,
+        daily_cost: day,
+        quote_items: quoteItems,
+        quote_html: emailBodyHtml,
+        reply_to: clientEmail
+      };
+
+      try {
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          {
+            ...baseParams,
+            to_email: clientEmail
+          }
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 1100));
+
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          {
+            ...baseParams,
+            to_email: SALES_EMAIL
+          }
+        );
+
+        sendStatus.textContent = "Quote sent to the client and a copy sent to your email.";
+      } catch (error) {
+        console.error("Email send failed:", error);
+        sendStatus.textContent = "Sorry, the quote could not be sent. Please try again.";
+      } finally {
+        sendQuoteBtn.disabled = false;
+        sendQuoteBtn.textContent = "Send Me This Quote";
+      }
+    }
+
+    function downloadQuote() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pageHeight = 280;
+      let y = 20;
+
+      const clientName = document.getElementById("clientName").value || "";
+      const clientCompany = document.getElementById("clientCompany").value || "";
+      const clientEmail = document.getElementById("clientEmail").value || "";
+      const staff = parseInt(document.getElementById("staff").value, 10) || 1;
+      const total = document.getElementById("total").innerText;
+      const employee = document.getElementById("employee").innerText;
+      const month = document.getElementById("month").innerText;
+      const day = document.getElementById("day").innerText;
+      const garments = document.getElementById("garments").innerText;
+
+      function newPageIfNeeded(extraSpace = 10) {
+        if (y + extraSpace > pageHeight) {
+          doc.addPage();
+          y = 20;
+        }
+      }
+
+      doc.setFontSize(16);
+      doc.text("Custom Workwear Direct Estimate", 20, y);
+      y += 10;
+
+      doc.setFontSize(11);
+      doc.text(`Client: ${clientName}`, 20, y); y += 6;
+      doc.text(`Company: ${clientCompany}`, 20, y); y += 6;
+      doc.text(`Email: ${clientEmail}`, 20, y); y += 6;
+      doc.text(`Number of Employees: ${staff}`, 20, y); y += 6;
+      doc.text(`Total Garments: ${garments}`, 20, y); y += 10;
+
+      doc.setFontSize(12);
+      doc.text("Selected Items", 20, y);
+      y += 8;
+
+      document.querySelectorAll(".card").forEach(card => {
+        const productName = card.dataset.name;
+        const unitPrice = parseFloat(card.dataset.price) || 0;
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+
+        if (qtyPerEmployee <= 0) return;
+
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+        const colourSelect = card.querySelector(".colourSelect");
+        const colour = colourSelect ? colourSelect.value : "N/A";
+        const totalQty = qtyPerEmployee * staff;
+        const lineTotal = totalQty * (unitPrice + brandingPrice);
+
+        newPageIfNeeded(28);
+
+        doc.setFontSize(11);
+        doc.text(`${productName}`, 20, y); y += 6;
+        doc.text(`How many per person: ${qtyPerEmployee}`, 25, y); y += 6;
+        doc.text(`Total quantity: ${totalQty}`, 25, y); y += 6;
+
+        if (colour !== "N/A") {
+          doc.text(`Preferred colour: ${colour}`, 25, y); y += 6;
+        }
+
+        doc.text(`Logo option: ${brandingType}`, 25, y); y += 6;
+        doc.text(`Line total: £${lineTotal.toFixed(2)}`, 25, y); y += 8;
+      });
+
+      newPageIfNeeded(35);
+
+      doc.setFontSize(12);
+      doc.text("Cost Summary", 20, y);
+      y += 8;
+
+      doc.setFontSize(11);
+      doc.text(`Total estimate: £${total}`, 20, y); y += 6;
+      doc.text(`Cost per employee: £${employee}`, 20, y); y += 6;
+      doc.text(`Monthly cost per employee: £${month}`, 20, y); y += 6;
+      doc.text(`Daily cost per employee: £${day}`, 20, y); y += 10;
+
+      const noteLines = doc.splitTextToSize(
+        "Please note: this estimate is for budgeting purposes. Final garment sizes and any colour split will be confirmed before order is placed.",
+        170
+      );
+      doc.text(noteLines, 20, y);
+
+      doc.save("uniform-estimate.pdf");
+    }
+
+    document.addEventListener("input", calculate);
+    document.addEventListener("change", calculate);
+
+    renderProducts();
+    calculate();
+  </script>
+</body>
+</html>
