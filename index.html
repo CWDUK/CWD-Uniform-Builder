@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uniform Builder</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+    :root {
+      --brand: #FF5B1A;
+      --dark: #333333;
+      --bg: #f4f4f4;
+      --border: #e9e9e9;
+      --soft: #fafafa;
+      --softBrand: #FFF4EE;
+      --softBrandBorder: #ffd8c8;
+      --shadow: 0 8px 24px rgba(0,0,0,0.12);
+      --topOffset: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 30px;
+      color: #222;
+    }
+
+    .pageWrap {
+      max-width: 1420px;
+      margin: 0 auto;
+    }
+
+    .mainGrid {
+      display: block;
+    }
+
+    .mainContent {
+      min-width: 0;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .header img {
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: var(--brand);
+    }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #555;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .summary {
+      background: var(--dark);
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+    }
+
+    .quoteMetaRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .quoteMetaField {
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      min-width: 180px;
+      flex: 1 1 180px;
+    }
+
+    .quoteMetaField label {
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    .quoteMetaField input {
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      box-sizing: border-box;
+      background: #f7f7f7;
+      color: #222;
+      font: inherit;
+    }
+
+    .quoteMetaField input[readonly] {
+      font-weight: bold;
+    }
+
+    .clientRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .clientField {
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      min-width: 180px;
+      flex: 1 1 180px;
+    }
+
+    .clientField label {
+      margin-bottom: 4px;
+    }
+
+    .clientField input {
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .requiredPrompt {
+      display: none;
+      margin-top: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #FF5B1A;
+      line-height: 1.35;
+    }
+
+    .requiredPrompt.show {
+      display: block;
+    }
+
+    .inputError {
+      outline: 2px solid #FF5B1A;
+      background: #fff7f3 !important;
+    }
+
+    .packageSection {
+      margin: 10px 0 22px;
+      text-align: center;
+    }
+
+    .packageTitle {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 14px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .packageButtons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .packageBtn {
+      position: relative;
+      background: #fff;
+      color: #333;
+      border: 2px solid transparent;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      min-width: 180px;
+      transition: 0.2s ease;
+    }
+
+    .packageBtn strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .packageBtn span {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .packageBtn.active {
+      border-color: var(--brand);
+      background: var(--softBrand);
+    }
+
+    .packageBadge {
+      position: absolute;
+      top: -10px;
+      right: 10px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 20px;
+    }
+
+    .totals {
+      text-align: center;
+      line-height: 1.9;
+    }
+
+    .total {
+      font-size: 30px;
+      color: var(--brand);
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .valueBannerWrap {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .valueBanner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #ffffff;
+      border: 2px solid var(--brand);
+      border-radius: 12px;
+      padding: 12px 16px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .valueBanner img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .valueBannerText {
+      color: #000;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .buttonRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button.actionBtn {
+      background: var(--brand);
+      border: none;
+      padding: 12px 18px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      min-width: 220px;
+      transition: 0.2s ease;
+    }
+
+    button.actionBtn:hover,
+    .quoteSidebarBtn:hover {
+      opacity: 0.95;
+    }
+
+    button.actionBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .sendStatus {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    .builderArea {
+      display: block;
+    }
+
+    .productsWrap {
+      min-width: 0;
+    }
+
+    .desktopAside {
+      display: none;
+      align-self: stretch;
+    }
+
+    .desktopAsideInner {
+      position: relative;
+      min-height: 1px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    .card.active {
+      border: 2px solid var(--brand);
+      box-shadow: 0 4px 14px rgba(255,91,26,0.18);
+    }
+
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .options {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .productTitle {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .productPrice {
+      color: var(--brand);
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+
+    .productBreakdown {
+      font-size: 11px;
+      color: #666;
+      line-height: 1.45;
+      min-height: 32px;
+      margin-bottom: 8px;
+    }
+
+    .fieldGroup {
+      margin-bottom: 12px;
+    }
+
+    .fieldGroup:last-child {
+      margin-bottom: 0;
+    }
+
+    .fieldGroup label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: #444;
+      font-weight: bold;
+    }
+
+    .fieldGroup input,
+    .fieldGroup select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .lineNote {
+      font-size: 12px;
+      color: #777;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .discountApplied {
+      font-size: 12px;
+      color: #0a7a32;
+      margin: 6px 0 10px;
+      line-height: 1.4;
+      font-weight: bold;
+      min-height: 20px;
+    }
+
+    .lineTotal {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      display: none;
+    }
+
+    .lineTotal.active {
+      display: block;
+    }
+
+    .swatchGroup {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .colourSwatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #d9d9d9;
+      cursor: pointer;
+      padding: 0;
+      outline: none;
+      position: relative;
+      transition: 0.2s ease;
+      background-clip: padding-box;
+    }
+
+    .colourSwatch:hover {
+      transform: scale(1.06);
+    }
+
+    .colourSwatch.active {
+      border: 3px solid var(--brand);
+      box-shadow: 0 0 0 3px rgba(255,91,26,0.14);
+    }
+
+    .colourSwatch.whiteSwatch {
+      border-color: #bbb;
+    }
+
+    .swatchLabel {
+      font-size: 11px;
+      color: #666;
+      margin-top: 8px;
+      min-height: 14px;
+    }
+
+    .brandingButtonGroup {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .brandingBtn {
+      border: 1px solid #ddd;
+      background: #fff;
+      color: #444;
+      border-radius: 20px;
+      padding: 7px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      line-height: 1.2;
+    }
+
+    .brandingBtn:hover {
+      border-color: var(--brand);
+    }
+
+    .brandingBtn.active {
+      background: var(--softBrand);
+      border-color: var(--brand);
+      color: var(--brand);
+      font-weight: bold;
+    }
+
+    .quoteSidebar {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid #ececec;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .quoteSidebar.is-fixed {
+      position: fixed;
+      top: var(--topOffset);
+      z-index: 10;
+    }
+
+    .quoteSidebar.is-bottom {
+      position: absolute;
+      top: auto;
+      bottom: 0;
+    }
+
+    .quoteSidebarContent {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: calc(100vh - (var(--topOffset) * 2));
+      max-height: calc(100vh - (var(--topOffset) * 2));
+    }
+
+    .quoteSidebarBody {
+      padding: 16px 16px 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
+    .quoteSidebarFooter {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .quoteSidebarLabel {
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #777;
+      margin-bottom: 6px;
+    }
+
+    .quoteSidebarTitle {
+      font-size: 18px;
+      font-weight: bold;
+      color: #222;
+      margin-bottom: 10px;
+    }
+
+    .quoteSidebarTotal {
+      font-size: 30px;
+      font-weight: bold;
+      color: var(--brand);
+      line-height: 1.1;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .quoteSidebarGrid {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .quoteSidebarItem {
+      padding: 10px 12px;
+      background: var(--soft);
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+
+    .quoteSidebarItemLabel {
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .quoteSidebarItemValue {
+      font-size: 14px;
+      font-weight: bold;
+      color: #222;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .selectedItemsBlock {
+      margin-bottom: 14px;
+      padding: 12px;
+      background: #fff7f3;
+      border: 1px solid var(--softBrandBorder);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
+    .selectedItemsTitle {
+      font-size: 11px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: bold;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .selectedItemsList {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+      flex: 1 1 auto;
+    }
+
+    .selectedItem {
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .selectedItem:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .selectedItemTop {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 3px;
+    }
+
+    .selectedItemName {
+      font-weight: bold;
+      min-width: 0;
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.35;
+      color: #222;
+    }
+
+    .selectedItemQty {
+      color: var(--brand);
+      font-weight: bold;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+
+    .selectedItemBottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .selectedItemMeta {
+      color: #666;
+    }
+
+    .selectedItemLineTotal {
+      color: #222;
+      font-weight: bold;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .selectedItemsEmpty {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .quoteSidebarBtn {
+      width: 100%;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .footerNote {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .copyrightNote {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    @media (min-width: 1180px) {
+      .builderArea {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 290px;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .desktopAside {
+        display: block;
+        position: relative;
+      }
+
+      .products {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+
+    @media (max-width: 1179px) {
+      .quoteSidebarContent {
+        height: auto;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      .header {
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+      }
+
+      .header img {
+        max-width: 220px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .intro {
+        font-size: 14px;
+        margin-bottom: 18px;
+      }
+
+      .summary {
+        padding: 16px;
+        margin-bottom: 18px;
+      }
+
+      .quoteMetaRow,
+      .clientRow {
+        gap: 10px;
+      }
+
+      .quoteMetaField,
+      .clientField {
+        min-width: 100%;
+      }
+
+      .quoteMetaField input,
+      .clientField input,
+      .fieldGroup input,
+      .fieldGroup select {
+        font-size: 16px;
+        min-height: 44px;
+      }
+
+      .packageTitle {
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+
+      .packageButtons {
+        gap: 8px;
+      }
+
+      .packageBtn,
+      button.actionBtn {
+        width: 100%;
+        min-width: 100%;
+      }
+
+      .packageBtn {
+        padding: 12px;
+      }
+
+      .buttonRow {
+        gap: 10px;
+      }
+
+      button.actionBtn {
+        min-height: 46px;
+      }
+
+      .products {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .card img {
+        height: 180px;
+      }
+
+      .options {
+        padding: 12px;
+      }
+
+      .fieldGroup {
+        margin-bottom: 10px;
+      }
+
+      .lineNote {
+        font-size: 11px;
+      }
+
+      .discountApplied {
+        min-height: auto;
+      }
+
+      .total {
+        font-size: 26px;
+      }
+
+      .valueBannerWrap {
+        margin-top: 14px;
+      }
+
+      .valueBanner {
+        max-width: 100%;
+        padding: 10px 12px;
+      }
+
+      .valueBannerText {
+        font-size: 14px;
+      }
+
+      .brandingBtn {
+        font-size: 10.5px;
+        padding: 7px 9px;
+      }
+
+      .sendStatus {
+        font-size: 12px;
+      }
+
+      .footerNote {
+        font-size: 12px;
+        margin-top: 16px;
+      }
+
+      .copyrightNote {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pageWrap">
+    <div class="mainGrid">
+      <div class="mainContent">
+        <div class="header">
+          <img src="logo.png" alt="Custom Workwear Direct Logo">
+          <h1>Uniform Builder</h1>
+        </div>
+
+        <div class="intro">
+          Build your team’s uniform package in under 60 seconds and see the cost per employee.
+        </div>
+
+        <div class="summary">
+          <div class="quoteMetaRow">
+            <div class="quoteMetaField">
+              <label for="quoteReference">Quote Reference</label>
+              <input id="quoteReference" type="text" readonly>
+            </div>
+            <div class="quoteMetaField">
+              <label for="quoteDate">Quote Date</label>
+              <input id="quoteDate" type="text" readonly>
+            </div>
+            <div class="quoteMetaField">
+              <label for="validUntil">Valid Until</label>
+              <input id="validUntil" type="text">
+            </div>
+          </div>
+
+          <div class="clientRow">
+            <div class="clientField">
+              <label for="clientName">Client Name</label>
+              <input id="clientName" type="text">
+              <div class="requiredPrompt" id="clientNamePrompt">Please enter the client name.</div>
+            </div>
+
+            <div class="clientField">
+              <label for="clientCompany">Company</label>
+              <input id="clientCompany" type="text">
+              <div class="requiredPrompt" id="clientCompanyPrompt">Please enter the company name.</div>
+            </div>
+
+            <div class="clientField">
+              <label for="clientEmail">Email</label>
+              <input id="clientEmail" type="email">
+              <div class="requiredPrompt" id="clientEmailPrompt">Please enter the client email address.</div>
+            </div>
+
+            <div class="clientField">
+              <label for="staff">Number of Employees</label>
+              <input id="staff" type="number" min="1" value="1">
+            </div>
+          </div>
+
+          <div class="packageSection">
+            <div class="packageTitle">Quick Package Options</div>
+            <div class="packageButtons">
+              <button type="button" class="packageBtn" id="package-essential" onclick="applyPackage('essential')">
+                <strong>Essential</strong>
+                <span>Simple everyday starter package</span>
+              </button>
+
+              <button type="button" class="packageBtn" id="package-professional" onclick="applyPackage('professional')">
+                <div class="packageBadge">Most Popular</div>
+                <strong>Professional</strong>
+                <span>Balanced option for most teams</span>
+              </button>
+
+              <button type="button" class="packageBtn" id="package-complete" onclick="applyPackage('complete')">
+                <strong>Complete</strong>
+                <span>Full branded package with extra coverage</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="totals">
+            <div class="total">£<span id="total">0.00</span></div>
+            Cost per employee £<span id="employee">0.00</span><br>
+            Monthly equivalent £<span id="month">0.00</span><br>
+            Daily equivalent £<span id="day">0.00</span><br>
+            Total garments <span id="garments">0</span>
+
+            <div class="valueBannerWrap">
+              <div class="valueBanner">
+                <img src="coffee.png" alt="Coffee icon">
+                <div class="valueBannerText">From less than a coffee per day per employee</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="buttonRow">
+            <button type="button" class="actionBtn" onclick="sendAndDownload()" id="sendDownloadBtn">One-Click Send + Download</button>
+            <button type="button" class="actionBtn" onclick="clearBuilder()">Clear Builder</button>
+          </div>
+
+          <div class="sendStatus" id="sendStatus"></div>
+        </div>
+
+        <div class="builderArea" id="builderArea">
+          <div class="productsWrap" id="productsWrap">
+            <div class="products" id="products"></div>
+          </div>
+
+          <aside class="desktopAside" id="desktopAside">
+            <div class="desktopAsideInner" id="desktopAsideInner">
+              <div class="quoteSidebar" id="quoteSidebar">
+                <div class="quoteSidebarContent">
+                  <div class="quoteSidebarBody">
+                    <div class="quoteSidebarLabel">Live Quote</div>
+                    <div class="quoteSidebarTitle">Quote Summary</div>
+                    <div class="quoteSidebarTotal">£<span id="stickyTotal">0.00</span></div>
+
+                    <div class="quoteSidebarGrid">
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Quote ref</div>
+                        <div class="quoteSidebarItemValue" id="stickyQuoteRef">—</div>
+                      </div>
+
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Per employee</div>
+                        <div class="quoteSidebarItemValue">£<span id="stickyEmployee">0.00</span></div>
+                      </div>
+
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Valid until</div>
+                        <div class="quoteSidebarItemValue" id="stickyValidUntil">—</div>
+                      </div>
+
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Selected package</div>
+                        <div class="quoteSidebarItemValue" id="stickyPackage">No package selected</div>
+                      </div>
+
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Product lines</div>
+                        <div class="quoteSidebarItemValue"><span id="stickyLines">0</span> selected</div>
+                      </div>
+
+                      <div class="quoteSidebarItem">
+                        <div class="quoteSidebarItemLabel">Total garments</div>
+                        <div class="quoteSidebarItemValue"><span id="stickyGarments">0</span></div>
+                      </div>
+                    </div>
+
+                    <div class="selectedItemsBlock">
+                      <div class="selectedItemsTitle">Selected items</div>
+                      <div class="selectedItemsList" id="selectedItemsList">
+                        <div class="selectedItemsEmpty">No items selected yet.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="quoteSidebarFooter">
+                    <button type="button" class="quoteSidebarBtn" onclick="sendAndDownload()">One-Click Send + Download</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footerNote">
+          <div>This builder is for budgeting purposes. Final garment sizes and any colour split are confirmed before order.</div>
+          <div class="copyrightNote">© <span id="copyrightYear"></span> Custom Workwear Direct. All rights reserved.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EMAILJS_PUBLIC_KEY = "7Xoh3edDIYoMya2df";
+    const EMAILJS_SERVICE_ID = "service_jpj7bou";
+    const EMAILJS_TEMPLATE_ID = "uniform_quote_pdf";
+    const SALES_EMAIL = "sales@customworkweardirect.co.uk";
+
+    emailjs.init({
+      publicKey: EMAILJS_PUBLIC_KEY
+    });
+
+    const defaultDiscountTiers = [
+      { minQty: 250, discount: 22 },
+      { minQty: 100, discount: 20 },
+      { minQty: 75, discount: 17 },
+      { minQty: 50, discount: 15 },
+      { minQty: 25, discount: 12 },
+      { minQty: 10, discount: 10 }
+    ];
+
+    const products = [
+      { name: "Polo Shirt", price: 6, image: "polo.jpg", type: "polo", recommendation: "Typical: 2–3 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "T-Shirt", price: 4, image: "tshirt.jpg", type: "tshirt", recommendation: "Typical: 2–3 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"], discountTiers: null },
+      { name: "Hoodie", price: 20, image: "hoodie.jpg", type: "hoodie", recommendation: "Typical: 1–2 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"], discountTiers: null },
+      { name: "Sweatshirt", price: 15, image: "sweatshirt.jpg", type: "sweatshirt", recommendation: "Typical: 1–2 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print", "Large Front Print", "Large Back Print"], discountTiers: null },
+      { name: "1/4 Zip Sweatshirt", price: 20, image: "quarterzip.jpg", type: "quarterzip", recommendation: "Typical: 1–2 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Body Warmer", price: 30, image: "bodywarmer.jpg", type: "bodywarmer", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Fleece Jacket", price: 20, image: "fleecejacket.jpg", type: "fleece", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Soft Shell Jacket", price: 35, image: "softshell.jpg", type: "softshell", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Hi Vis Vest", price: 4, image: "hivisvest.jpg", type: "hivis", recommendation: "Typical: 1–2 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Hi Vis Jacket", price: 55, image: "hivisjacket.jpg", type: "hivis", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Left Chest Embroidery", "Left Chest Print"], discountTiers: null },
+      { name: "Work Trouser", price: 15, image: "worktrouser.jpg", type: "trouser", recommendation: "Typical: 2 per employee", brandingOptions: ["No Branding"], discountTiers: null },
+      { name: "Safety Trainers", price: 35, image: "trainers.jpg", type: "footwear", recommendation: "Typical: 1 pair per employee", brandingOptions: ["No Branding"], discountTiers: null },
+      { name: "Safety Boots", price: 69, image: "boots.jpg", type: "footwear", recommendation: "Typical: 1 pair per employee", brandingOptions: ["No Branding"], discountTiers: null },
+      { name: "Safety Cap", price: 15, image: "cap.jpg", type: "cap", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Front Embroidery"], discountTiers: null },
+      { name: "Beanie", price: 7, image: "beanie.jpg", type: "cap", recommendation: "Typical: 1 per employee", brandingOptions: ["No Branding", "Front Embroidery"], discountTiers: null }
+    ];
+
+    const packages = {
+      essential: { name: "Essential", items: { "Polo Shirt": 2, "Hoodie": 1 } },
+      professional: { name: "Professional", items: { "Polo Shirt": 3, "Hoodie": 1, "Soft Shell Jacket": 1 } },
+      complete: { name: "Complete", items: { "Polo Shirt": 4, "Hoodie": 2, "Soft Shell Jacket": 1, "Hi Vis Vest": 1 } }
+    };
+
+    const brandingPrices = {
+      "No Branding": 0,
+      "Left Chest Embroidery": 5,
+      "Left Chest Print": 4,
+      "Front Embroidery": 5,
+      "Large Front Print": 5,
+      "Large Back Print": 5
+    };
+
+    const colourMap = {
+      polo: ["Black", "Charcoal", "Navy", "Grey", "White"],
+      tshirt: ["Black", "Charcoal", "Navy", "Grey", "White"],
+      hoodie: ["Black", "Charcoal", "Navy", "Grey"],
+      sweatshirt: ["Black", "Charcoal", "Navy", "Grey"],
+      quarterzip: ["Black", "Grey", "Navy"],
+      bodywarmer: ["Black", "Navy"],
+      fleece: ["Black", "Navy", "Grey"],
+      softshell: ["Black", "Navy"],
+      hivis: ["Yellow", "Orange"],
+      trouser: ["Black", "Navy"],
+      cap: ["Black", "Navy"],
+      footwear: []
+    };
+
+    const swatchColourValues = {
+      Black: "#111111",
+      Charcoal: "#4A4A4A",
+      Navy: "#1F3A5F",
+      Grey: "#9A9A9A",
+      White: "#FFFFFF",
+      Yellow: "#FFE600",
+      Orange: "#FF7A00"
+    };
+
+    const brandingButtonLabels = {
+      "No Branding": "No Branding",
+      "Left Chest Embroidery": "Left Chest Emb",
+      "Left Chest Print": "Left Chest Print",
+      "Front Embroidery": "Front Emb",
+      "Large Front Print": "Large Front",
+      "Large Back Print": "Large Back"
+    };
+
+    const container = document.getElementById("products");
+    const sendStatus = document.getElementById("sendStatus");
+    const sendDownloadBtn = document.getElementById("sendDownloadBtn");
+    let activePackage = "";
+
+    function formatCurrency(value) {
+      return `£${Number(value).toFixed(2)}`;
+    }
+
+    function formatDateForDisplay(date) {
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    }
+
+    function generateQuoteReference() {
+      const now = new Date();
+      const y = now.getFullYear().toString().slice(-2);
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const h = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const s = String(now.getSeconds()).padStart(2, "0");
+      const randomPart = Math.floor(10 + Math.random() * 90);
+
+      return `CWD-${y}${m}${d}-${h}${min}${s}-${randomPart}`;
+    }
+
+    function setValidUntilDefault() {
+      const today = new Date();
+      const future = new Date(today);
+      future.setDate(today.getDate() + 14);
+      document.getElementById("validUntil").value = formatDateForDisplay(future);
+    }
+
+    function initialiseQuoteMeta() {
+      document.getElementById("quoteReference").value = generateQuoteReference();
+      document.getElementById("quoteDate").value = formatDateForDisplay(new Date());
+      setValidUntilDefault();
+      document.getElementById("stickyQuoteRef").textContent = document.getElementById("quoteReference").value;
+      document.getElementById("stickyValidUntil").textContent = document.getElementById("validUntil").value;
+    }
+
+    function getQuoteReference() {
+      return document.getElementById("quoteReference").value.trim();
+    }
+
+    function getQuoteDate() {
+      return document.getElementById("quoteDate").value.trim();
+    }
+
+    function getValidUntil() {
+      return document.getElementById("validUntil").value.trim();
+    }
+
+    function getStaffCount() {
+      const value = parseInt(document.getElementById("staff").value, 10);
+      return value > 0 ? value : 1;
+    }
+
+    function getColours(type) {
+      return colourMap[type] || [];
+    }
+
+    function getProductByName(productName) {
+      return products.find(item => item.name === productName);
+    }
+
+    function getProductDiscountTiers(productName) {
+      const product = getProductByName(productName);
+      if (!product) return [];
+      if (Array.isArray(product.discountTiers)) return product.discountTiers;
+      return defaultDiscountTiers;
+    }
+
+    function getDiscountForQuantity(productName, totalQty) {
+      const product = getProductByName(productName);
+
+      if (!product || totalQty <= 0) {
+        return { discountPercent: 0, discountedUnitPrice: 0, originalUnitPrice: 0 };
+      }
+
+      const tiers = getProductDiscountTiers(productName);
+      const matchedTier = tiers.find(tier => totalQty >= tier.minQty);
+
+      if (!matchedTier) {
+        return {
+          discountPercent: 0,
+          discountedUnitPrice: product.price,
+          originalUnitPrice: product.price
+        };
+      }
+
+      return {
+        discountPercent: matchedTier.discount,
+        discountedUnitPrice: product.price * (1 - matchedTier.discount / 100),
+        originalUnitPrice: product.price
+      };
+    }
+
+    function buildColourSwatches(type) {
+      const colours = getColours(type);
+      if (!colours.length) return "";
+
+      const defaultColour = colours[0];
+
+      return `
+        <div class="fieldGroup">
+          <label>Preferred colour</label>
+          <div class="swatchGroup">
+            ${colours.map((colour, index) => {
+              const swatchColour = swatchColourValues[colour] || "#cccccc";
+              const isWhite = colour === "White" ? "whiteSwatch" : "";
+              const isActive = index === 0 ? "active" : "";
+              return `
+                <button
+                  type="button"
+                  class="colourSwatch ${isWhite} ${isActive}"
+                  data-colour="${colour}"
+                  title="${colour}"
+                  style="background:${swatchColour};"
+                ></button>
+              `;
+            }).join("")}
+          </div>
+          <input type="hidden" class="colourSelect" value="${defaultColour}">
+          <div class="swatchLabel">Selected: ${defaultColour}</div>
+          <div class="lineNote">Final colour split can be confirmed before order.</div>
+        </div>
+      `;
+    }
+
+    function buildBrandingButtons(options) {
+      const defaultOption = options[0];
+
+      return `
+        <div class="fieldGroup">
+          <label>Logo option</label>
+          <div class="brandingButtonGroup">
+            ${options.map((option, index) => `
+              <button
+                type="button"
+                class="brandingBtn ${index === 0 ? "active" : ""}"
+                data-branding="${option}"
+              >
+                ${brandingButtonLabels[option] || option}
+              </button>
+            `).join("")}
+          </div>
+          <input type="hidden" class="brandingSelect" value="${defaultOption}">
+        </div>
+      `;
+    }
+
+    function renderProducts() {
+      container.innerHTML = "";
+
+      products.forEach(product => {
+        const card = `
+          <div class="card" data-name="${product.name}" data-price="${product.price}" data-image="${product.image}">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="options">
+              <div class="productTitle">${product.name}</div>
+              <div class="productPrice">£${product.price.toFixed(2)} each</div>
+              <div class="productBreakdown">Base garment price</div>
+              <div class="discountApplied"></div>
+              <div class="lineTotal"></div>
+
+              <div class="fieldGroup">
+                <label>How many per person?</label>
+                <input type="number" class="qtyPerEmployee" min="0" value="0">
+                <div class="lineNote">${product.recommendation}</div>
+              </div>
+
+              ${buildColourSwatches(product.type)}
+              ${buildBrandingButtons(product.brandingOptions)}
+            </div>
+          </div>
+        `;
+
+        container.insertAdjacentHTML("beforeend", card);
+      });
+    }
+
+    function setActivePackageButton(packageKey = "") {
+      document.querySelectorAll(".packageBtn").forEach(btn => btn.classList.remove("active"));
+      if (packageKey) {
+        const btn = document.getElementById(`package-${packageKey}`);
+        if (btn) btn.classList.add("active");
+      }
+      activePackage = packageKey;
+    }
+
+    function clearQuantitiesOnly() {
+      document.querySelectorAll(".qtyPerEmployee").forEach(input => {
+        input.value = 0;
+      });
+    }
+
+    function setCardColour(card, colour) {
+      const hiddenInput = card.querySelector(".colourSelect");
+      const swatchLabel = card.querySelector(".swatchLabel");
+      const swatches = card.querySelectorAll(".colourSwatch");
+
+      if (!hiddenInput || !swatchLabel || !swatches.length) return;
+
+      hiddenInput.value = colour;
+      swatchLabel.textContent = `Selected: ${colour}`;
+
+      swatches.forEach(swatch => {
+        swatch.classList.toggle("active", swatch.dataset.colour === colour);
+      });
+    }
+
+    function resetAllColoursToDefault() {
+      document.querySelectorAll(".card").forEach(card => {
+        const firstSwatch = card.querySelector(".colourSwatch");
+        if (firstSwatch) setCardColour(card, firstSwatch.dataset.colour);
+      });
+    }
+
+    function setCardBranding(card, branding) {
+      const hiddenInput = card.querySelector(".brandingSelect");
+      const buttons = card.querySelectorAll(".brandingBtn");
+
+      if (!hiddenInput || !buttons.length) return;
+
+      hiddenInput.value = branding;
+      buttons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.branding === branding);
+      });
+
+      updateCardPrice(card);
+    }
+
+    function resetAllBrandingToDefault() {
+      document.querySelectorAll(".card").forEach(card => {
+        const firstBtn = card.querySelector(".brandingBtn");
+        if (firstBtn) setCardBranding(card, firstBtn.dataset.branding);
+      });
+    }
+
+    function updateCardPrice(card) {
+      const productName = card.dataset.name;
+      const basePrice = parseFloat(card.dataset.price) || 0;
+      const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+      const staff = getStaffCount();
+      const totalQty = qtyPerEmployee * staff;
+      const brandingType = card.querySelector(".brandingSelect")?.value || "No Branding";
+      const brandingPrice = brandingPrices[brandingType] || 0;
+
+      const discountData = getDiscountForQuantity(productName, totalQty);
+      const garmentUnitPrice = totalQty > 0 ? discountData.discountedUnitPrice : basePrice;
+      const displayedEachPrice = garmentUnitPrice + brandingPrice;
+
+      const productPriceEl = card.querySelector(".productPrice");
+      const productBreakdownEl = card.querySelector(".productBreakdown");
+
+      if (!productPriceEl || !productBreakdownEl) return;
+
+      productPriceEl.textContent = `£${displayedEachPrice.toFixed(2)} each`;
+
+      if (brandingType === "No Branding") {
+        if (discountData.discountPercent > 0 && qtyPerEmployee > 0) {
+          productBreakdownEl.textContent = `Garment £${garmentUnitPrice.toFixed(2)} after ${discountData.discountPercent}% volume discount`;
+        } else {
+          productBreakdownEl.textContent = `Base garment price`;
+        }
+      } else {
+        const customText = `${brandingType} +£${brandingPrice.toFixed(2)}`;
+        if (discountData.discountPercent > 0 && qtyPerEmployee > 0) {
+          productBreakdownEl.textContent = `Garment £${garmentUnitPrice.toFixed(2)} after ${discountData.discountPercent}% discount + ${customText}`;
+        } else {
+          productBreakdownEl.textContent = `Garment £${basePrice.toFixed(2)} + ${customText}`;
+        }
+      }
+    }
+
+    function updateAllCardPrices() {
+      document.querySelectorAll(".card").forEach(card => updateCardPrice(card));
+    }
+
+    function applyPackage(packageKey) {
+      const selectedPackage = packages[packageKey];
+      if (!selectedPackage) return;
+
+      clearQuantitiesOnly();
+
+      document.querySelectorAll(".card").forEach(card => {
+        const productName = card.dataset.name;
+        const qtyInput = card.querySelector(".qtyPerEmployee");
+        const brandingButtons = card.querySelectorAll(".brandingBtn");
+
+        const packageQty = selectedPackage.items[productName] || 0;
+        qtyInput.value = packageQty;
+
+        if (brandingButtons.length) {
+          if (packageQty > 0) {
+            const optionValues = Array.from(brandingButtons).map(button => button.dataset.branding);
+
+            if (optionValues.includes("Left Chest Embroidery")) {
+              setCardBranding(card, "Left Chest Embroidery");
+            } else if (optionValues.includes("Front Embroidery")) {
+              setCardBranding(card, "Front Embroidery");
+            } else {
+              setCardBranding(card, optionValues[0]);
+            }
+          } else {
+            setCardBranding(card, brandingButtons[0].dataset.branding);
+          }
+        }
+      });
+
+      setActivePackageButton(packageKey);
+      calculate();
+    }
+
+    function getSelectedLineCount() {
+      let lines = 0;
+      document.querySelectorAll(".card").forEach(card => {
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+        if (qtyPerEmployee > 0) lines += 1;
+      });
+      return lines;
+    }
+
+    function getSelectedSidebarItems() {
+      const staff = getStaffCount();
+      const selected = [];
+
+      document.querySelectorAll(".card").forEach(card => {
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+        if (qtyPerEmployee <= 0) return;
+
+        const productName = card.dataset.name;
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+        const totalQty = qtyPerEmployee * staff;
+        const discountData = getDiscountForQuantity(productName, totalQty);
+        const lineTotal = totalQty * (discountData.discountedUnitPrice + brandingPrice);
+
+        selected.push({
+          name: productName,
+          qtyPerEmployee,
+          lineTotal
+        });
+      });
+
+      return selected;
+    }
+
+    function updateSidebarSelectedItems() {
+      const list = document.getElementById("selectedItemsList");
+      if (!list) return;
+
+      const items = getSelectedSidebarItems();
+
+      if (!items.length) {
+        list.innerHTML = `<div class="selectedItemsEmpty">No items selected yet.</div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(item => `
+        <div class="selectedItem">
+          <div class="selectedItemTop">
+            <div class="selectedItemName">${item.name}</div>
+            <div class="selectedItemQty">${item.qtyPerEmployee} each</div>
+          </div>
+          <div class="selectedItemBottom">
+            <div class="selectedItemMeta">Line total</div>
+            <div class="selectedItemLineTotal">${formatCurrency(item.lineTotal)}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function showFieldPrompt(inputId, promptId, show) {
+      const input = document.getElementById(inputId);
+      const prompt = document.getElementById(promptId);
+
+      if (!input || !prompt) return;
+
+      input.classList.toggle("inputError", show);
+      prompt.classList.toggle("show", show);
+    }
+
+    function clearRequiredPrompts() {
+      showFieldPrompt("clientName", "clientNamePrompt", false);
+      showFieldPrompt("clientCompany", "clientCompanyPrompt", false);
+      showFieldPrompt("clientEmail", "clientEmailPrompt", false);
+    }
+
+    function validateRequiredClientFields(showPrompts = false) {
+      const clientName = document.getElementById("clientName").value.trim();
+      const clientCompany = document.getElementById("clientCompany").value.trim();
+      const clientEmail = document.getElementById("clientEmail").value.trim();
+
+      const nameMissing = !clientName;
+      const companyMissing = !clientCompany;
+      const emailMissing = !clientEmail;
+
+      if (showPrompts) {
+        showFieldPrompt("clientName", "clientNamePrompt", nameMissing);
+        showFieldPrompt("clientCompany", "clientCompanyPrompt", companyMissing);
+        showFieldPrompt("clientEmail", "clientEmailPrompt", emailMissing);
+      }
+
+      return !(nameMissing || companyMissing || emailMissing);
+    }
+
+    function calculate() {
+      const staff = getStaffCount();
+      let total = 0;
+      let totalGarments = 0;
+
+      document.querySelectorAll(".card").forEach(card => {
+        const productName = card.dataset.name;
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+        const totalQty = qtyPerEmployee * staff;
+
+        const discountData = getDiscountForQuantity(productName, totalQty);
+        const discountPercent = discountData.discountPercent;
+        const discountedUnitPrice = discountData.discountedUnitPrice;
+        const lineTotal = totalQty * (discountedUnitPrice + brandingPrice);
+
+        total += lineTotal;
+        totalGarments += totalQty;
+
+        const discountAppliedEl = card.querySelector(".discountApplied");
+        const lineTotalEl = card.querySelector(".lineTotal");
+
+        if (qtyPerEmployee > 0) {
+          card.classList.add("active");
+        } else {
+          card.classList.remove("active");
+        }
+
+        if (qtyPerEmployee > 0 && discountPercent > 0) {
+          discountAppliedEl.textContent = "Garment discounts applied";
+        } else {
+          discountAppliedEl.textContent = "";
+        }
+
+        if (qtyPerEmployee > 0) {
+          lineTotalEl.classList.add("active");
+          lineTotalEl.textContent = `Line total: £${lineTotal.toFixed(2)}`;
+        } else {
+          lineTotalEl.classList.remove("active");
+          lineTotalEl.textContent = "";
+        }
+
+        updateCardPrice(card);
+      });
+
+      const costPerEmployee = total / staff;
+      const selectedLines = getSelectedLineCount();
+      const selectedPackageName = activePackage ? packages[activePackage].name : "No package selected";
+
+      document.getElementById("total").innerText = total.toFixed(2);
+      document.getElementById("employee").innerText = costPerEmployee.toFixed(2);
+      document.getElementById("month").innerText = (costPerEmployee / 12).toFixed(2);
+      document.getElementById("day").innerText = (costPerEmployee / 365).toFixed(2);
+      document.getElementById("garments").innerText = totalGarments;
+
+      document.getElementById("stickyTotal").innerText = total.toFixed(2);
+      document.getElementById("stickyEmployee").innerText = costPerEmployee.toFixed(2);
+      document.getElementById("stickyGarments").innerText = totalGarments;
+      document.getElementById("stickyLines").innerText = selectedLines;
+      document.getElementById("stickyPackage").textContent = selectedPackageName;
+      document.getElementById("stickyQuoteRef").textContent = getQuoteReference() || "—";
+      document.getElementById("stickyValidUntil").textContent = getValidUntil() || "—";
+
+      updateSidebarSelectedItems();
+      updateDesktopSummaryPosition();
+    }
+
+    function clearBuilder() {
+      document.getElementById("clientName").value = "";
+      document.getElementById("clientCompany").value = "";
+      document.getElementById("clientEmail").value = "";
+      document.getElementById("staff").value = 1;
+      sendStatus.textContent = "";
+      clearRequiredPrompts();
+
+      initialiseQuoteMeta();
+
+      document.querySelectorAll(".qtyPerEmployee").forEach(input => input.value = 0);
+      document.querySelectorAll(".card").forEach(card => card.classList.remove("active"));
+      document.querySelectorAll(".discountApplied").forEach(el => el.textContent = "");
+      document.querySelectorAll(".lineTotal").forEach(el => {
+        el.textContent = "";
+        el.classList.remove("active");
+      });
+      setActivePackageButton("");
+      resetAllColoursToDefault();
+      resetAllBrandingToDefault();
+
+      calculate();
+    }
+
+    function getSelectedItems() {
+      const staff = getStaffCount();
+      const items = [];
+
+      document.querySelectorAll(".card").forEach(card => {
+        const productName = card.dataset.name;
+        const image = card.dataset.image || "";
+        const unitPrice = parseFloat(card.dataset.price) || 0;
+        const qtyPerEmployee = parseInt(card.querySelector(".qtyPerEmployee").value, 10) || 0;
+
+        if (qtyPerEmployee <= 0) return;
+
+        const brandingType = card.querySelector(".brandingSelect").value;
+        const brandingPrice = brandingPrices[brandingType] || 0;
+        const colourInput = card.querySelector(".colourSelect");
+        const colour = colourInput ? colourInput.value : "";
+        const totalQty = qtyPerEmployee * staff;
+
+        const discountData = getDiscountForQuantity(productName, totalQty);
+        const discountPercent = discountData.discountPercent;
+        const discountedUnitPrice = discountData.discountedUnitPrice;
+        const lineTotal = totalQty * (discountedUnitPrice + brandingPrice);
+
+        items.push({
+          productName,
+          image,
+          qtyPerEmployee,
+          totalQty,
+          colour,
+          brandingType,
+          unitPrice,
+          discountedUnitPrice,
+          discountPercent,
+          brandingPrice,
+          lineTotal
+        });
+      });
+
+      return items;
+    }
+
+    function buildQuoteText() {
+      const items = getSelectedItems();
+      const quoteReference = getQuoteReference();
+      const quoteDate = getQuoteDate();
+      const validUntil = getValidUntil();
+
+      if (!items.length) return "No items selected.";
+
+      const intro = [
+        `Quote Reference: ${quoteReference}`,
+        `Quote Date: ${quoteDate}`,
+        `Valid Until: ${validUntil}`
+      ].join("\n");
+
+      const body = items.map(item => {
+        let line = `${item.productName}
+- How many per person: ${item.qtyPerEmployee}
+- Total quantity: ${item.totalQty}
+- Garment unit price: £${item.unitPrice.toFixed(2)}`;
+
+        if (item.discountPercent > 0) {
+          line += `
+- Volume discount on garment only: ${item.discountPercent}%
+- Discounted garment unit price: £${item.discountedUnitPrice.toFixed(2)}`;
+        }
+
+        if (item.colour) {
+          line += `
+- Preferred colour: ${item.colour}`;
+        }
+
+        line += `
+- Logo option: ${item.brandingType}
+- Logo cost per item: £${item.brandingPrice.toFixed(2)}
+- Line total: £${item.lineTotal.toFixed(2)}`;
+
+        return line;
+      }).join("\n\n");
+
+      return `${intro}\n\n${body}`;
+    }
+
+    function buildQuoteHtml() {
+      const items = getSelectedItems();
+      if (!items.length) return "<p style='margin:0;'>No items selected.</p>";
+
+      const quoteReference = getQuoteReference();
+      const quoteDate = getQuoteDate();
+      const validUntil = getValidUntil();
+      const clientName = document.getElementById("clientName").value.trim();
+      const clientCompany = document.getElementById("clientCompany").value.trim();
+      const clientEmail = document.getElementById("clientEmail").value.trim();
+      const staff = getStaffCount();
+      const totalGarments = document.getElementById("garments").innerText;
+      const totalEstimate = document.getElementById("total").innerText;
+      const costPerEmployee = document.getElementById("employee").innerText;
+      const monthlyCost = document.getElementById("month").innerText;
+      const dailyCost = document.getElementById("day").innerText;
+
+      const itemBlocks = items.map(item => {
+        return `
+          <div style="margin-bottom:14px;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#ffffff;">
+            <div style="font-size:16px;font-weight:bold;color:#222;margin-bottom:8px;">
+              ${item.productName}
+            </div>
+            <div style="font-size:14px;line-height:1.7;color:#444;">
+              <strong>How many per person:</strong> ${item.qtyPerEmployee}<br>
+              <strong>Total quantity:</strong> ${item.totalQty}<br>
+              <strong>Garment unit price:</strong> £${item.unitPrice.toFixed(2)}
+              ${item.discountPercent > 0 ? `<br><strong>Volume discount on garment only:</strong> ${item.discountPercent}%` : ""}
+              ${item.discountPercent > 0 ? `<br><strong>Discounted garment unit price:</strong> £${item.discountedUnitPrice.toFixed(2)}` : ""}
+              ${item.colour ? `<br><strong>Preferred colour:</strong> ${item.colour}` : ""}
+              <br><strong>Logo option:</strong> ${item.brandingType}
+              <br><strong>Logo cost per item:</strong> £${item.brandingPrice.toFixed(2)}
+              <br><strong>Line total:</strong> £${item.lineTotal.toFixed(2)}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div style="font-size:14px;line-height:1.7;color:#333;">
+          <div style="margin-bottom:20px;">
+            <div style="font-size:22px;font-weight:bold;color:#FF5B1A;margin-bottom:12px;">
+              Custom Workwear Direct Estimate
+            </div>
+
+            <div style="margin-bottom:6px;"><strong>Quote Reference:</strong> ${quoteReference}</div>
+            <div style="margin-bottom:6px;"><strong>Quote Date:</strong> ${quoteDate}</div>
+            <div style="margin-bottom:6px;"><strong>Valid Until:</strong> ${validUntil}</div>
+            <div style="margin-bottom:6px;"><strong>Client Name:</strong> ${clientName}</div>
+            <div style="margin-bottom:6px;"><strong>Company:</strong> ${clientCompany}</div>
+            <div style="margin-bottom:6px;"><strong>Email:</strong> ${clientEmail}</div>
+            <div style="margin-bottom:6px;"><strong>Number of Employees:</strong> ${staff}</div>
+            <div style="margin-bottom:6px;"><strong>Total Garments:</strong> ${totalGarments}</div>
+            ${activePackage ? `<div style="margin-bottom:6px;"><strong>Selected Package:</strong> ${packages[activePackage].name}</div>` : ""}
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:bold;color:#FF5B1A;margin-bottom:12px;">
+              Selected Items
+            </div>
+            ${itemBlocks}
+          </div>
+
+          <div style="padding:16px;border:1px solid #e5e5e5;border-radius:8px;background:#ffffff;">
+            <div style="font-size:18px;font-weight:bold;color:#FF5B1A;margin-bottom:12px;">
+              Cost Summary
+            </div>
+
+            <div style="margin-bottom:6px;"><strong>Total Estimate:</strong> £${totalEstimate}</div>
+            <div style="margin-bottom:6px;"><strong>Cost per Employee:</strong> £${costPerEmployee}</div>
+            <div style="margin-bottom:6px;"><strong>Monthly Cost per Employee:</strong> £${monthlyCost}</div>
+            <div><strong>Daily Cost per Employee:</strong> £${dailyCost}</div>
+          </div>
+
+          <div style="margin-top:20px;font-size:12px;color:#666;">
+            This estimate is for budgeting purposes. Final garment sizes and any colour split are confirmed before order.
+          </div>
+        </div>
+      `;
+    }
+
+    function loadImageAsDataURL(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function() {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/jpeg", 0.92));
+          } catch (error) {
+            reject(error);
+          }
+        };
+        img.onerror = function() {
+          reject(new Error(`Could not load image: ${src}`));
+        };
+        img.src = src;
+      });
+    }
+
+    async function sendQuote() {
+      const quoteReference = getQuoteReference();
+      const quoteDate = getQuoteDate();
+      const validUntil = getValidUntil();
+      const clientName = document.getElementById("clientName").value.trim();
+      const clientCompany = document.getElementById("clientCompany").value.trim();
+      const clientEmail = document.getElementById("clientEmail").value.trim();
+      const staff = getStaffCount();
+      const total = document.getElementById("total").innerText;
+      const employee = document.getElementById("employee").innerText;
+      const month = document.getElementById("month").innerText;
+      const day = document.getElementById("day").innerText;
+      const garments = document.getElementById("garments").innerText;
+      const quoteItems = buildQuoteText();
+      const quoteHtml = buildQuoteHtml();
+
+      if (!clientName || !clientCompany || !clientEmail) {
+        sendStatus.textContent = "Please enter client name, company and email.";
+        return false;
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(clientEmail)) {
+        sendStatus.textContent = "Please enter a valid email address.";
+        return false;
+      }
+
+      if (getSelectedItems().length === 0) {
+        sendStatus.textContent = "Please add at least one product before sending.";
+        return false;
+      }
+
+      sendStatus.textContent = "Sending quote to client and copy to sales...";
+
+      const baseParams = {
+        quote_reference: quoteReference,
+        quote_date: quoteDate,
+        valid_until: validUntil,
+        client_name: clientName,
+        client_company: clientCompany,
+        client_email: clientEmail,
+        employees: staff,
+        total_garments: garments,
+        total_estimate: total,
+        cost_per_employee: employee,
+        monthly_cost: month,
+        daily_cost: day,
+        quote_items: quoteItems,
+        quote_html: quoteHtml,
+        reply_to: clientEmail
+      };
+
+      try {
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          { ...baseParams, to_email: clientEmail }
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          { ...baseParams, to_email: SALES_EMAIL }
+        );
+
+        sendStatus.textContent = "Quote sent to the client and a copy sent to sales@customworkweardirect.co.uk.";
+        return true;
+      } catch (error) {
+        console.error("Email send failed:", error);
+        sendStatus.textContent = "Sorry, the quote could not be sent. Please try again.";
+        return false;
+      }
+    }
+
+    async function downloadQuote() {
+      const items = getSelectedItems();
+
+      if (!items.length) {
+        alert("Please add at least one product before downloading the quote.");
+        return false;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 15;
+      const usableWidth = pageWidth - (margin * 2);
+
+      let y = 15;
+
+      const quoteReference = getQuoteReference();
+      const quoteDate = getQuoteDate();
+      const validUntil = getValidUntil();
+      const clientName = document.getElementById("clientName").value || "";
+      const clientCompany = document.getElementById("clientCompany").value || "";
+      const clientEmail = document.getElementById("clientEmail").value || "";
+      const staff = getStaffCount();
+      const total = document.getElementById("total").innerText;
+      const employee = document.getElementById("employee").innerText;
+      const month = document.getElementById("month").innerText;
+      const day = document.getElementById("day").innerText;
+      const garments = document.getElementById("garments").innerText;
+
+      function addPageIfNeeded(requiredHeight = 20) {
+        if (y + requiredHeight > pageHeight - margin) {
+          doc.addPage();
+          y = 15;
+        }
+      }
+
+      function sectionTitle(title) {
+        addPageIfNeeded(12);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(255, 91, 26);
+        doc.text(title, margin, y);
+        y += 8;
+
+        doc.setDrawColor(230, 230, 230);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 6;
+
+        doc.setTextColor(40, 40, 40);
+      }
+
+      let logoAdded = false;
+      try {
+        const logo = await loadImageAsDataURL("logo.png");
+        doc.addImage(logo, "PNG", margin, y, 50, 18);
+        logoAdded = true;
+      } catch (error) {
+        logoAdded = false;
+      }
+
+      if (!logoAdded) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(255, 91, 26);
+        doc.text("Custom Workwear Direct", margin, y + 10);
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(255, 91, 26);
+      doc.text("Quote", pageWidth - margin, y + 10, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      doc.text("Prepared by Custom Workwear Direct", pageWidth - margin, y + 16, { align: "right" });
+
+      y += 30;
+
+      sectionTitle("Quote Details");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Reference: ${quoteReference}`, margin, y); y += 6;
+      doc.text(`Date: ${quoteDate}`, margin, y); y += 6;
+      doc.text(`Valid Until: ${validUntil}`, margin, y); y += 10;
+
+      sectionTitle("Client");
+      doc.text(`Name: ${clientName || "N/A"}`, margin, y); y += 6;
+      doc.text(`Company: ${clientCompany || "N/A"}`, margin, y); y += 6;
+      doc.text(`Email: ${clientEmail || "N/A"}`, margin, y); y += 6;
+      doc.text(`Employees: ${staff}`, margin, y); y += 6;
+      doc.text(`Total Garments: ${garments}`, margin, y); y += 6;
+      if (activePackage) {
+        doc.text(`Selected Package: ${packages[activePackage].name}`, margin, y);
+        y += 6;
+      }
+      y += 4;
+
+      sectionTitle("Selected Items");
+
+      for (const item of items) {
+        let imageAdded = false;
+        let xText = margin + 4;
+
+        const lines = [
+          `Per person: ${item.qtyPerEmployee}`,
+          `Total qty: ${item.totalQty}`,
+          `Unit: £${item.unitPrice.toFixed(2)}`,
+          item.discountPercent > 0 ? `Discount: ${item.discountPercent}%` : "",
+          item.discountPercent > 0 ? `Discounted unit: £${item.discountedUnitPrice.toFixed(2)}` : "",
+          item.colour ? `Colour: ${item.colour}` : "",
+          `Branding: ${item.brandingType}`,
+          `Branding cost: £${item.brandingPrice.toFixed(2)}`,
+          `Line total: £${item.lineTotal.toFixed(2)}`
+        ].filter(Boolean);
+
+        try {
+          await loadImageAsDataURL(item.image);
+          imageAdded = true;
+          xText = margin + 30;
+        } catch (error) {
+          imageAdded = false;
+          xText = margin + 4;
+        }
+
+        const lineHeight = 4.2;
+        const contentHeight = 12 + (lines.length * lineHeight);
+        const imageHeight = imageAdded ? 30 : 0;
+        const boxHeight = Math.max(36, contentHeight + 6, imageHeight);
+
+        addPageIfNeeded(boxHeight + 6);
+
+        doc.setDrawColor(230, 230, 230);
+        doc.roundedRect(margin, y, usableWidth, boxHeight, 3, 3);
+
+        if (imageAdded) {
+          try {
+            const img = await loadImageAsDataURL(item.image);
+            doc.addImage(img, "JPEG", margin + 3, y + 3, 24, 24);
+          } catch (error) {}
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(34, 34, 34);
+        doc.text(item.productName, xText, y + 6);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(70, 70, 70);
+
+        let lineY = y + 12;
+        lines.forEach(line => {
+          doc.text(line, xText, lineY);
+          lineY += lineHeight;
+        });
+
+        y += boxHeight + 6;
+      }
+
+      addPageIfNeeded(42);
+      doc.setFillColor(255, 244, 238);
+      doc.roundedRect(margin, y, usableWidth, 34, 4, 4, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(255, 91, 26);
+      doc.text(`Total: £${total}`, margin + 5, y + 10);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Per Employee: £${employee}`, margin + 5, y + 18);
+      doc.text(`Monthly: £${month}`, margin + 5, y + 24);
+      doc.text(`Daily: £${day}`, margin + 5, y + 30);
+
+      y += 45;
+
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8.5);
+      doc.setTextColor(110, 110, 110);
+      doc.text("Prepared by Custom Workwear Direct", margin, y);
+      y += 5;
+      doc.text(
+        "This quote is for budgeting purposes. Final garment sizes and colour splits are confirmed before order.",
+        margin,
+        y,
+        { maxWidth: usableWidth }
+      );
+
+      const safeRef = quoteReference.replace(/[^a-zA-Z0-9-_]/g, "-");
+      doc.save(`CWD-Quote-${safeRef}.pdf`);
+
+      return true;
+    }
+
+    async function sendAndDownload() {
+      if (getSelectedItems().length === 0) {
+        sendStatus.textContent = "Please add at least one product before continuing.";
+        return;
+      }
+
+      const validClientFields = validateRequiredClientFields(true);
+
+      if (!validClientFields) {
+        sendStatus.textContent = "Please complete the required client details before continuing.";
+        return;
+      }
+
+      sendDownloadBtn.disabled = true;
+      sendDownloadBtn.textContent = "Working...";
+      sendStatus.textContent = "Downloading quote and sending email...";
+
+      try {
+        const downloaded = await downloadQuote();
+        if (!downloaded) return;
+
+        const sent = await sendQuote();
+        if (sent) {
+          sendStatus.textContent = "Quote downloaded and email sent successfully.";
+        }
+      } finally {
+        sendDownloadBtn.disabled = false;
+        sendDownloadBtn.textContent = "One-Click Send + Download";
+      }
+    }
+
+    function updateDesktopSummaryPosition() {
+      const desktopAside = document.getElementById("desktopAside");
+      const desktopAsideInner = document.getElementById("desktopAsideInner");
+      const quoteSidebar = document.getElementById("quoteSidebar");
+      const productsWrap = document.getElementById("productsWrap");
+
+      if (!desktopAside || !desktopAsideInner || !quoteSidebar || !productsWrap) return;
+
+      if (window.innerWidth < 1180) {
+        quoteSidebar.classList.remove("is-fixed", "is-bottom");
+        quoteSidebar.style.left = "";
+        quoteSidebar.style.width = "";
+        desktopAsideInner.style.height = "";
+        return;
+      }
+
+      const topOffset = 24;
+      const productsRect = productsWrap.getBoundingClientRect();
+      const asideRect = desktopAside.getBoundingClientRect();
+      const sidebarHeight = quoteSidebar.offsetHeight;
+      const productsHeight = productsWrap.offsetHeight;
+
+      desktopAsideInner.style.height = `${Math.max(productsHeight, sidebarHeight)}px`;
+
+      const startFix = productsRect.top - topOffset;
+      const stopFix = productsRect.bottom - sidebarHeight - topOffset;
+
+      quoteSidebar.classList.remove("is-fixed", "is-bottom");
+      quoteSidebar.style.left = "";
+      quoteSidebar.style.width = "";
+
+      if (startFix > 0) {
+        return;
+      }
+
+      if (stopFix <= 0) {
+        quoteSidebar.classList.add("is-bottom");
+        quoteSidebar.style.width = `${asideRect.width}px`;
+        return;
+      }
+
+      quoteSidebar.classList.add("is-fixed");
+      quoteSidebar.style.left = `${asideRect.left}px`;
+      quoteSidebar.style.width = `${asideRect.width}px`;
+    }
+
+    document.addEventListener("input", function(e) {
+      if (e.target.classList.contains("qtyPerEmployee")) {
+        setActivePackageButton("");
+        updateAllCardPrices();
+      }
+
+      if (e.target.id === "clientName" && e.target.value.trim()) {
+        showFieldPrompt("clientName", "clientNamePrompt", false);
+      }
+
+      if (e.target.id === "clientCompany" && e.target.value.trim()) {
+        showFieldPrompt("clientCompany", "clientCompanyPrompt", false);
+      }
+
+      if (e.target.id === "clientEmail" && e.target.value.trim()) {
+        showFieldPrompt("clientEmail", "clientEmailPrompt", false);
+      }
+
+      if (
+        e.target.id === "staff" ||
+        e.target.id === "validUntil" ||
+        e.target.classList.contains("qtyPerEmployee")
+      ) {
+        calculate();
+      }
+    });
+
+    document.addEventListener("change", function() {
+      calculate();
+    });
+
+    document.addEventListener("click", function(e) {
+      if (e.target.classList.contains("colourSwatch")) {
+        const card = e.target.closest(".card");
+        const colour = e.target.dataset.colour;
+        if (card && colour) {
+          setCardColour(card, colour);
+          calculate();
+        }
+      }
+
+      if (e.target.classList.contains("brandingBtn")) {
+        const card = e.target.closest(".card");
+        const branding = e.target.dataset.branding;
+        if (card && branding) {
+          setCardBranding(card, branding);
+          calculate();
+        }
+      }
+    });
+
+    window.addEventListener("scroll", updateDesktopSummaryPosition, { passive: true });
+    window.addEventListener("resize", updateDesktopSummaryPosition);
+    window.addEventListener("load", updateDesktopSummaryPosition);
+
+    document.getElementById("copyrightYear").textContent = new Date().getFullYear();
+
+    initialiseQuoteMeta();
+    renderProducts();
+    resetAllColoursToDefault();
+    resetAllBrandingToDefault();
+    updateAllCardPrices();
+    calculate();
+    updateDesktopSummaryPosition();
+  </script>
+</body>
+</html>
